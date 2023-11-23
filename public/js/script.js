@@ -1,5 +1,3 @@
-import { Chess } from 'chess.js';
-
 document.addEventListener('DOMContentLoaded', () => {
     const displayElement = document.getElementById('display');
     

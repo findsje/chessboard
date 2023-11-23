@@ -33,19 +33,130 @@ function makeRandomMove () {
   board.position(game.fen())
 }
 
+function makeRandomMoveSJE () {
+  var possibleMoves = game.moves()
+
+  // game over
+  if (possibleMoves.length === 0) return
+
+  var myMove = calculateNextMove();
+  console.log(myMove, 'myMove');
+  if (myMove !== null) {
+    game.move(myMove);
+    board.position(game.fen());
+  }
+  else {
+    var randomIdx = Math.floor(Math.random() * possibleMoves.length)
+    game.move(possibleMoves[randomIdx])
+  }
+
+  board.position(game.fen());
+}
+
+function calculateNextMove()
+{
+  if (game._moveNumber < 2) {
+    return 'e6';
+  }
+
+  var kills = findKills();
+  if (kills.length > 0) {
+    return getRandomMove(kills);
+  }
+
+  var moves = [];
+  var pieceMove = null
+  pieceMove = randomPieceMove(null);
+  if (pieceMove !== null) moves.push(pieceMove);
+  pieceMove = randomPieceMove(null);
+  if (pieceMove !== null) moves.push(pieceMove);
+  pieceMove = randomPieceMove('R');
+  if (pieceMove !== null && game._moveNumber > 10) moves.push(pieceMove);
+  pieceMove = randomPieceMove('N');
+  if (pieceMove !== null) moves.push(pieceMove);
+  pieceMove = randomPieceMove('B');
+  if (pieceMove !== null) moves.push(pieceMove);
+  pieceMove = randomPieceMove('Q');
+  if (pieceMove !== null && game._moveNumber > 20) moves.push(pieceMove);
+  pieceMove = randomPieceMove('K');
+  if (pieceMove !== null && game._moveNumber > 10) moves.push(pieceMove);
+
+  if (moves.length > 0) {
+    console.log('bestMoves', moves);
+    return getRandomMove(moves);
+  }
+  return null;
+}
+
+function randomPieceMove(piece) {
+  var move = null
+  var moves = findPieceMoves(piece);
+  if (moves.length > 0 ){
+    move = getRandomMove(moves);     
+  }
+  return move;
+}
+
+function getRandomMove(moves) {
+  var randomIdx = Math.floor(Math.random() * moves.length);
+  console.log('random kill move index', randomIdx);
+  return moves[randomIdx];
+}
+
+function findKills() 
+{
+  var moves = game.moves()
+  var killMoves = [];
+  for (var i = 0; i < moves.length; i++) {
+    var move = moves[i];
+    if (move.indexOf('x') !== -1) {
+      console.log(move, 'kill move found'); 
+      killMoves.push(move);
+    }
+  }
+  console.log(killMoves, 'killMoves');
+  return killMoves;
+}
+
+function findPieceMoves (piece) {
+  var possibleMoves = game.moves()
+  var pieceMoves = []
+  console.log(possibleMoves);
+  for (var i = 0; i < possibleMoves.length; i++) {
+    if (piece === null) {
+      if (possibleMoves[i].length == 2) {
+        pieceMoves.push(possibleMoves[i])
+      }
+    }
+    else
+    if (possibleMoves[i].indexOf(piece) !== -1) {
+      pieceMoves.push(possibleMoves[i])
+    }
+  }
+  return pieceMoves
+}
+
+
+
+
 function onDrop (source, target) {
   // see if the move is legal
+  try {
   var move = game.move({
     from: source,
     to: target,
     promotion: 'q' // NOTE: always promote to a queen for example simplicity
   })
-
+  }
+  catch (e)
+  {
+    return 'snapback'
+  }
   // illegal move
   if (move === null) return 'snapback'
 
   // make random legal move for black
-  window.setTimeout(makeRandomMove, 250)
+  window.setTimeout(makeRandomMoveSJE2, 250)
 }
 
 // update the board position after the piece snap
@@ -62,6 +173,35 @@ var config = {
   onSnapEnd: onSnapEnd
 }
 board = Chessboard('myBoard', config)
+
+// Usage:
+const sjeChess = new window.MyClass();
+sjeChess.test();
+
+
+function makeRandomMoveSJE2 () {
+  var possibleMoves = game.moves()
+  console.log(possibleMoves, 'possibleMoves');
+  // game over
+  if (possibleMoves.length === 0) return
+
+  var rating = 0;
+
+  var [myMove, rating] = sjeChess.getHighestRatedMove(game, 3, true, rating, 'b');
+  console.log(myMove, 'myMove');
+
+  if (myMove !== null) {
+    game.move(myMove);
+    board.position(game.fen());
+  }
+  else {
+    var randomIdx = Math.floor(Math.random() * possibleMoves.length)
+    game.move(possibleMoves[randomIdx])
+  }
+
+  board.position(game.fen());
+}
+
 
 
 </script>
